@@ -1,0 +1,328 @@
+{
+  "entities": {
+    "UserAccount": {
+      "title": "UserAccount",
+      "description": "Private student account containing PII (email) and personal friend code.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "avatarEmoji": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "friendCode": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 10,
+          "pattern": "^[A-Z0-9]{6,10}$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "displayName", "avatarEmoji", "friendCode", "createdAt", "updatedAt"]
+    },
+    "FriendLink": {
+      "title": "FriendLink",
+      "description": "A saved friend entry inside the owner's private friends subcollection.",
+      "type": "object",
+      "properties": {
+        "ownerUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "friendUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "friendCode": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 10,
+          "pattern": "^[A-Z0-9]{6,10}$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "avatarEmoji": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "addedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["ownerUid", "friendUid", "friendCode", "displayName", "avatarEmoji", "addedAt"]
+    },
+    "PublicProfile": {
+      "title": "PublicProfile",
+      "description": "Public non-PII student score profile for friends leaderboard and display.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "avatarEmoji": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "friendCode": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 10,
+          "pattern": "^[A-Z0-9]{6,10}$"
+        },
+        "points": {
+          "type": "integer"
+        },
+        "streakDays": {
+          "type": "integer"
+        },
+        "completedCount": {
+          "type": "integer"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "avatarEmoji", "friendCode", "points", "streakDays", "completedCount", "updatedAt"]
+    },
+    "FriendCodeLookup": {
+      "title": "FriendCodeLookup",
+      "description": "Direct code-to-student lookup document (no PII) so friends can add each other by code.",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 10,
+          "pattern": "^[A-Z0-9]{6,10}$"
+        },
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "avatarEmoji": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["code", "uid", "displayName", "avatarEmoji", "createdAt", "updatedAt"]
+    },
+    "FriendChat": {
+      "title": "FriendChat",
+      "description": "Direct two-student conversation thread for study messages and quiz challenges.",
+      "type": "object",
+      "properties": {
+        "chatId": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 260,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "participants": {
+          "type": "array"
+        },
+        "p1Name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "p2Name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "p1Avatar": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "p2Avatar": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "lastMessageText": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "lastMessageType": {
+          "type": "string",
+          "enum": ["text", "challenge", "score_reply"]
+        },
+        "lastSenderUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "chatId",
+        "participants",
+        "p1Name",
+        "p2Name",
+        "p1Avatar",
+        "p2Avatar",
+        "lastMessageText",
+        "lastMessageType",
+        "lastSenderUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Immutable message or quiz challenge sent between two friends.",
+      "type": "object",
+      "properties": {
+        "senderUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "senderName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "senderAvatar": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "participants": {
+          "type": "array"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["text", "challenge", "score_reply"]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "quizId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "quizTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "subjectId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 30
+        },
+        "score": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["senderUid", "senderName", "senderAvatar", "participants", "type", "text", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserAccount" },
+      "description": "Private user account with email and personal friend code; strictly owner-only."
+    },
+    "/users/{userId}/friends/{friendUid}": {
+      "schema": { "$ref": "#/entities/FriendLink" },
+      "description": "Owner-scoped list of added friends."
+    },
+    "/profiles/{userId}": {
+      "schema": { "$ref": "#/entities/PublicProfile" },
+      "description": "Non-PII public score card for point-lookup by friends."
+    },
+    "/friendCodes/{code}": {
+      "schema": { "$ref": "#/entities/FriendCodeLookup" },
+      "description": "Direct point-lookup mapping friend code to public user identity."
+    },
+    "/chats/{chatId}": {
+      "schema": { "$ref": "#/entities/FriendChat" },
+      "description": "Two-participant chat metadata for friends messaging and quiz challenges."
+    },
+    "/chats/{chatId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "Immutable messages and quiz challenges inside a friend chat."
+    }
+  }
+}

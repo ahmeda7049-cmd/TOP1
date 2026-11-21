@@ -1,0 +1,6 @@
+{
+  "name": "عربي أولى ثانوي",
+  "description": "منصة تفاعلية لتعلم اللغة العربية للصف الأول الثانوي: دروس الأدب والنصوص والبلاغة والنحو مع اختبارات فورية وتتبع التقدم.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

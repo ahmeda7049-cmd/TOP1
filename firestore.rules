@@ -1,0 +1,306 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ==================== GLOBAL PRIMITIVES ====================
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidChatId(id) {
+      return id is string && id.size() >= 3 && id.size() <= 260 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidFriendCode(code) {
+      return code is string && code.size() >= 6 && code.size() <= 10 && code.matches('^[A-Z0-9]{6,10}$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // ==================== VALIDATION BLUEPRINTS ====================
+    function isValidUserAccount(data) {
+      return data.uid is string
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && data.email is string
+        && data.email.size() >= 3
+        && data.email.size() <= 160
+        && data.displayName is string
+        && data.displayName.size() >= 1
+        && data.displayName.size() <= 40
+        && data.avatarEmoji is string
+        && data.avatarEmoji.size() >= 1
+        && data.avatarEmoji.size() <= 16
+        && isValidFriendCode(data.friendCode)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidFriendLink(data, ownerId, friendId) {
+      return data.keys().hasAll(['ownerUid', 'friendUid', 'friendCode', 'displayName', 'avatarEmoji', 'addedAt'])
+        && data.keys().hasOnly(['ownerUid', 'friendUid', 'friendCode', 'displayName', 'avatarEmoji', 'addedAt'])
+        && data.ownerUid is string
+        && data.ownerUid == ownerId
+        && data.ownerUid == request.auth.uid
+        && data.friendUid is string
+        && data.friendUid == friendId
+        && isValidId(data.friendUid)
+        && data.friendUid != data.ownerUid
+        && isValidFriendCode(data.friendCode)
+        && data.displayName is string
+        && data.displayName.size() >= 1
+        && data.displayName.size() <= 40
+        && data.avatarEmoji is string
+        && data.avatarEmoji.size() >= 1
+        && data.avatarEmoji.size() <= 16
+        && data.addedAt is timestamp;
+    }
+
+    function isValidPublicProfile(data) {
+      return data.uid is string
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && data.displayName is string
+        && data.displayName.size() >= 1
+        && data.displayName.size() <= 40
+        && data.avatarEmoji is string
+        && data.avatarEmoji.size() >= 1
+        && data.avatarEmoji.size() <= 16
+        && isValidFriendCode(data.friendCode)
+        && data.points is int
+        && data.points >= 0
+        && data.points <= 100000
+        && data.streakDays is int
+        && data.streakDays >= 0
+        && data.streakDays <= 3650
+        && data.completedCount is int
+        && data.completedCount >= 0
+        && data.completedCount <= 200
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidFriendCodeLookup(data, codePath) {
+      return data.code is string
+        && data.code == codePath
+        && isValidFriendCode(data.code)
+        && data.uid is string
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && data.displayName is string
+        && data.displayName.size() >= 1
+        && data.displayName.size() <= 40
+        && data.avatarEmoji is string
+        && data.avatarEmoji.size() >= 1
+        && data.avatarEmoji.size() <= 16
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidChat(data, chatIdPath) {
+      return data.chatId is string
+        && data.chatId == chatIdPath
+        && isValidChatId(data.chatId)
+        && data.participants is list
+        && data.participants.size() == 2
+        && data.participants[0] is string
+        && data.participants[1] is string
+        && isValidId(data.participants[0])
+        && isValidId(data.participants[1])
+        && data.participants[0] < data.participants[1]
+        && data.chatId == data.participants[0] + '_' + data.participants[1]
+        && data.p1Name is string && data.p1Name.size() >= 1 && data.p1Name.size() <= 40
+        && data.p2Name is string && data.p2Name.size() >= 1 && data.p2Name.size() <= 40
+        && data.p1Avatar is string && data.p1Avatar.size() >= 1 && data.p1Avatar.size() <= 16
+        && data.p2Avatar is string && data.p2Avatar.size() >= 1 && data.p2Avatar.size() <= 16
+        && data.lastMessageText is string && data.lastMessageText.size() >= 1 && data.lastMessageText.size() <= 300
+        && data.lastMessageType is string
+        && (data.lastMessageType == 'text' || data.lastMessageType == 'challenge' || data.lastMessageType == 'score_reply')
+        && data.lastSenderUid is string
+        && isValidId(data.lastSenderUid)
+        && data.lastSenderUid in data.participants
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll(['senderUid', 'senderName', 'senderAvatar', 'participants', 'type', 'text', 'createdAt'])
+        && data.keys().hasOnly(['senderUid', 'senderName', 'senderAvatar', 'participants', 'type', 'text', 'quizId', 'quizTitle', 'subjectId', 'score', 'total', 'createdAt'])
+        && data.senderUid is string
+        && isValidId(data.senderUid)
+        && data.senderUid == request.auth.uid
+        && data.senderName is string && data.senderName.size() >= 1 && data.senderName.size() <= 40
+        && data.senderAvatar is string && data.senderAvatar.size() >= 1 && data.senderAvatar.size() <= 16
+        && data.participants is list
+        && data.participants.size() == 2
+        && data.participants[0] is string
+        && data.participants[1] is string
+        && request.auth.uid in data.participants
+        && data.type is string
+        && (data.type == 'text' || data.type == 'challenge' || data.type == 'score_reply')
+        && data.text is string && data.text.size() >= 1 && data.text.size() <= 500
+        && (!('quizId' in data) || (data.quizId is string && data.quizId.size() >= 1 && data.quizId.size() <= 80))
+        && (!('quizTitle' in data) || (data.quizTitle is string && data.quizTitle.size() >= 1 && data.quizTitle.size() <= 120))
+        && (!('subjectId' in data) || (data.subjectId is string && data.subjectId.size() >= 1 && data.subjectId.size() <= 30))
+        && (!('score' in data) || (data.score is int && data.score >= 0 && data.score <= 100))
+        && (!('total' in data) || (data.total is int && data.total >= 1 && data.total <= 100))
+        && data.createdAt is timestamp;
+    }
+
+    // ==================== COLLECTION MATCH BLOCKS ====================
+
+    // 1. Private User Accounts (Strict PII Isolation)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isVerifiedUser()
+        && isOwner(userId)
+        && incoming().keys().hasAll(['uid', 'email', 'displayName', 'avatarEmoji', 'friendCode', 'createdAt', 'updatedAt'])
+        && incoming().keys().hasOnly(['uid', 'email', 'displayName', 'avatarEmoji', 'friendCode', 'createdAt', 'updatedAt'])
+        && isValidUserAccount(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isVerifiedUser()
+        && isOwner(userId)
+        && isValidUserAccount(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'avatarEmoji', 'updatedAt'])
+        && incoming().uid == existing().uid
+        && incoming().email == existing().email
+        && incoming().friendCode == existing().friendCode
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time;
+      allow delete: if false;
+
+      // 2. Owner-scoped Friends List
+      match /friends/{friendUid} {
+        allow get: if isValidId(userId) && isValidId(friendUid) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && resource.data.ownerUid == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(friendUid)
+          && isVerifiedUser()
+          && isOwner(userId)
+          && isValidFriendLink(incoming(), userId, friendUid)
+          && incoming().addedAt == request.time
+          && exists(/databases/$(database)/documents/profiles/$(friendUid));
+        allow update: if false;
+        allow delete: if isValidId(userId) && isValidId(friendUid) && isOwner(userId);
+      }
+    }
+
+    // 3. Public Non-PII Profiles (Point-lookup by friend UID only, no scraping)
+    match /profiles/{userId} {
+      allow get: if isSignedIn() && isValidId(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isVerifiedUser()
+        && isOwner(userId)
+        && incoming().keys().hasAll(['uid', 'displayName', 'avatarEmoji', 'friendCode', 'points', 'streakDays', 'completedCount', 'updatedAt'])
+        && incoming().keys().hasOnly(['uid', 'displayName', 'avatarEmoji', 'friendCode', 'points', 'streakDays', 'completedCount', 'updatedAt'])
+        && isValidPublicProfile(incoming())
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isVerifiedUser()
+        && isOwner(userId)
+        && isValidPublicProfile(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'avatarEmoji', 'points', 'streakDays', 'completedCount', 'updatedAt'])
+        && incoming().uid == existing().uid
+        && incoming().friendCode == existing().friendCode
+        && incoming().updatedAt == request.time;
+      allow delete: if false;
+    }
+
+    // 4. Friend Code Direct Lookup (No list queries allowed)
+    match /friendCodes/{code} {
+      allow get: if isSignedIn() && isValidFriendCode(code);
+      allow list: if false;
+      allow create: if isValidFriendCode(code)
+        && isVerifiedUser()
+        && incoming().keys().hasAll(['code', 'uid', 'displayName', 'avatarEmoji', 'createdAt', 'updatedAt'])
+        && incoming().keys().hasOnly(['code', 'uid', 'displayName', 'avatarEmoji', 'createdAt', 'updatedAt'])
+        && isValidFriendCodeLookup(incoming(), code)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidFriendCode(code)
+        && isVerifiedUser()
+        && existing().uid == request.auth.uid
+        && isValidFriendCodeLookup(incoming(), code)
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'avatarEmoji', 'updatedAt'])
+        && incoming().code == existing().code
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time;
+      allow delete: if false;
+    }
+
+    // 5. Two-Person Friend Chats
+    match /chats/{chatId} {
+      allow get: if isSignedIn() && isValidChatId(chatId) && request.auth.uid in resource.data.participants;
+      allow list: if isSignedIn() && request.auth.uid in resource.data.participants;
+      allow create: if isValidChatId(chatId)
+        && isVerifiedUser()
+        && incoming().keys().hasAll(['chatId', 'participants', 'p1Name', 'p2Name', 'p1Avatar', 'p2Avatar', 'lastMessageText', 'lastMessageType', 'lastSenderUid', 'createdAt', 'updatedAt'])
+        && incoming().keys().hasOnly(['chatId', 'participants', 'p1Name', 'p2Name', 'p1Avatar', 'p2Avatar', 'lastMessageText', 'lastMessageType', 'lastSenderUid', 'createdAt', 'updatedAt'])
+        && isValidChat(incoming(), chatId)
+        && request.auth.uid in incoming().participants
+        && incoming().lastSenderUid == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && exists(/databases/$(database)/documents/profiles/$(incoming().participants[0]))
+        && exists(/databases/$(database)/documents/profiles/$(incoming().participants[1]));
+      allow update: if isValidChatId(chatId)
+        && isVerifiedUser()
+        && request.auth.uid in existing().participants
+        && isValidChat(incoming(), chatId)
+        && incoming().diff(existing()).affectedKeys().hasOnly(['p1Name', 'p2Name', 'p1Avatar', 'p2Avatar', 'lastMessageText', 'lastMessageType', 'lastSenderUid', 'updatedAt'])
+        && incoming().chatId == existing().chatId
+        && incoming().participants == existing().participants
+        && incoming().createdAt == existing().createdAt
+        && incoming().lastSenderUid == request.auth.uid
+        && incoming().updatedAt == request.time;
+      allow delete: if false;
+
+      // 6. Chat Messages & Quiz Challenges (Master Gate + Immutable)
+      match /messages/{messageId} {
+        allow get: if isSignedIn()
+          && isValidChatId(chatId)
+          && isValidId(messageId)
+          && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        allow list: if isSignedIn()
+          && isValidChatId(chatId)
+          && request.auth.uid in resource.data.participants;
+        allow create: if isValidChatId(chatId)
+          && isValidId(messageId)
+          && isVerifiedUser()
+          && isValidMessage(incoming())
+          && incoming().createdAt == request.time
+          && exists(/databases/$(database)/documents/chats/$(chatId))
+          && incoming().participants == get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        allow update, delete: if false;
+      }
+    }
+  }
+}

@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-display: 'Cairo', system-ui, -apple-system, sans-serif;
+    --font-body: 'Tajawal', system-ui, -apple-system, sans-serif;
+    --surface-canvas: #FFF9FA;
+    --ink-primary: #1A2E3A;
+    --brand-teal: #1AC2B5;
+    --brand-teal-deep: #17B8A6;
+    --brand-pink: #FF8FAB;
+    --brand-pink-soft: #FFA9BC;
+    --brand-aqua: #A8E6E0;
+    --brand-gold: #FFD93D;
+  }
+
+  html {
+    font-family: var(--font-body);
+    background-color: var(--surface-canvas);
+    color: var(--ink-primary);
+    scroll-behavior: smooth;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+  }
+
+  button, a, [role="button"] {
+    touch-action: manipulation;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
