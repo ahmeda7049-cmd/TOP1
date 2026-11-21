@@ -99,6 +99,7 @@ service cloud.firestore {
         && data.completedCount is int
         && data.completedCount >= 0
         && data.completedCount <= 200
+        && data.isDiscoverable is bool
         && data.updatedAt is timestamp;
     }
 
@@ -115,6 +116,30 @@ service cloud.firestore {
         && data.avatarEmoji is string
         && data.avatarEmoji.size() >= 1
         && data.avatarEmoji.size() <= 16
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidFriendRequest(data, reqIdPath) {
+      return data.requestId is string
+        && data.requestId == reqIdPath
+        && isValidChatId(data.requestId)
+        && data.fromUid is string && isValidId(data.fromUid)
+        && data.toUid is string && isValidId(data.toUid)
+        && data.fromUid != data.toUid
+        && data.requestId == data.fromUid + '_' + data.toUid
+        && data.fromName is string && data.fromName.size() >= 1 && data.fromName.size() <= 40
+        && data.fromAvatar is string && data.fromAvatar.size() >= 1 && data.fromAvatar.size() <= 16
+        && isValidFriendCode(data.fromCode)
+        && data.toName is string && data.toName.size() >= 1 && data.toName.size() <= 40
+        && data.toAvatar is string && data.toAvatar.size() >= 1 && data.toAvatar.size() <= 16
+        && isValidFriendCode(data.toCode)
+        && data.participants is list
+        && data.participants.size() == 2
+        && data.participants[0] == data.fromUid
+        && data.participants[1] == data.toUid
+        && data.status is string
+        && (data.status == 'pending' || data.status == 'accepted' || data.status == 'declined')
         && data.createdAt is timestamp
         && data.updatedAt is timestamp;
     }
@@ -169,6 +194,47 @@ service cloud.firestore {
         && data.createdAt is timestamp;
     }
 
+    function isValidTeam(data, teamIdPath) {
+      return data.teamId is string
+        && data.teamId == teamIdPath
+        && isValidId(data.teamId)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 50
+        && data.ownerUid is string && isValidId(data.ownerUid)
+        && data.memberUids is list
+        && data.memberUids.size() >= 1
+        && data.memberUids.size() <= 25
+        && data.memberUids[0] is string
+        && data.ownerUid in data.memberUids
+        && data.lastMessageText is string && data.lastMessageText.size() >= 1 && data.lastMessageText.size() <= 300
+        && data.lastSenderUid is string && isValidId(data.lastSenderUid)
+        && data.lastSenderUid in data.memberUids
+        && data.lastSenderName is string && data.lastSenderName.size() >= 1 && data.lastSenderName.size() <= 40
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidTeamMessage(data) {
+      return data.keys().hasAll(['senderUid', 'senderName', 'senderAvatar', 'memberUids', 'type', 'text', 'createdAt'])
+        && data.keys().hasOnly(['senderUid', 'senderName', 'senderAvatar', 'memberUids', 'type', 'text', 'quizId', 'quizTitle', 'subjectId', 'createdAt'])
+        && data.senderUid is string
+        && isValidId(data.senderUid)
+        && data.senderUid == request.auth.uid
+        && data.senderName is string && data.senderName.size() >= 1 && data.senderName.size() <= 40
+        && data.senderAvatar is string && data.senderAvatar.size() >= 1 && data.senderAvatar.size() <= 16
+        && data.memberUids is list
+        && data.memberUids.size() >= 1
+        && data.memberUids.size() <= 25
+        && data.memberUids[0] is string
+        && request.auth.uid in data.memberUids
+        && data.type is string
+        && (data.type == 'text' || data.type == 'challenge')
+        && data.text is string && data.text.size() >= 1 && data.text.size() <= 500
+        && (!('quizId' in data) || (data.quizId is string && data.quizId.size() >= 1 && data.quizId.size() <= 80))
+        && (!('quizTitle' in data) || (data.quizTitle is string && data.quizTitle.size() >= 1 && data.quizTitle.size() <= 120))
+        && (!('subjectId' in data) || (data.subjectId is string && data.subjectId.size() >= 1 && data.subjectId.size() <= 30))
+        && data.createdAt is timestamp;
+    }
+
     // ==================== COLLECTION MATCH BLOCKS ====================
 
     // 1. Private User Accounts (Strict PII Isolation)
@@ -195,7 +261,7 @@ service cloud.firestore {
         && incoming().updatedAt == request.time;
       allow delete: if false;
 
-      // 2. Owner-scoped Friends List
+      // 2. Owner-scoped Accepted Friends List
       match /friends/{friendUid} {
         allow get: if isValidId(userId) && isValidId(friendUid) && isOwner(userId);
         allow list: if isValidId(userId) && isOwner(userId) && resource.data.ownerUid == request.auth.uid;
@@ -211,22 +277,22 @@ service cloud.firestore {
       }
     }
 
-    // 3. Public Non-PII Profiles (Point-lookup by friend UID only, no scraping)
+    // 3. Public Non-PII Student Profiles (Discoverable TOP1 students, zero PII)
     match /profiles/{userId} {
       allow get: if isSignedIn() && isValidId(userId);
-      allow list: if false;
+      allow list: if isSignedIn() && resource.data.isDiscoverable == true;
       allow create: if isValidId(userId)
         && isVerifiedUser()
         && isOwner(userId)
-        && incoming().keys().hasAll(['uid', 'displayName', 'avatarEmoji', 'friendCode', 'points', 'streakDays', 'completedCount', 'updatedAt'])
-        && incoming().keys().hasOnly(['uid', 'displayName', 'avatarEmoji', 'friendCode', 'points', 'streakDays', 'completedCount', 'updatedAt'])
+        && incoming().keys().hasAll(['uid', 'displayName', 'avatarEmoji', 'friendCode', 'points', 'streakDays', 'completedCount', 'isDiscoverable', 'updatedAt'])
+        && incoming().keys().hasOnly(['uid', 'displayName', 'avatarEmoji', 'friendCode', 'points', 'streakDays', 'completedCount', 'isDiscoverable', 'updatedAt'])
         && isValidPublicProfile(incoming())
         && incoming().updatedAt == request.time;
       allow update: if isValidId(userId)
         && isVerifiedUser()
         && isOwner(userId)
         && isValidPublicProfile(incoming())
-        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'avatarEmoji', 'points', 'streakDays', 'completedCount', 'updatedAt'])
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'avatarEmoji', 'points', 'streakDays', 'completedCount', 'isDiscoverable', 'updatedAt'])
         && incoming().uid == existing().uid
         && incoming().friendCode == existing().friendCode
         && incoming().updatedAt == request.time;
@@ -256,7 +322,39 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // 5. Two-Person Friend Chats
+    // 5. Friend Requests Between TOP1 Students
+    match /friendRequests/{requestId} {
+      allow get: if isSignedIn() && isValidChatId(requestId) && request.auth.uid in resource.data.participants;
+      allow list: if isSignedIn() && request.auth.uid in resource.data.participants;
+      allow create: if isValidChatId(requestId)
+        && isVerifiedUser()
+        && incoming().keys().hasAll(['requestId', 'fromUid', 'toUid', 'fromName', 'fromAvatar', 'fromCode', 'toName', 'toAvatar', 'toCode', 'participants', 'status', 'createdAt', 'updatedAt'])
+        && incoming().keys().hasOnly(['requestId', 'fromUid', 'toUid', 'fromName', 'fromAvatar', 'fromCode', 'toName', 'toAvatar', 'toCode', 'participants', 'status', 'createdAt', 'updatedAt'])
+        && isValidFriendRequest(incoming(), requestId)
+        && incoming().fromUid == request.auth.uid
+        && incoming().status == 'pending'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && exists(/databases/$(database)/documents/profiles/$(incoming().toUid));
+      allow update: if isValidChatId(requestId)
+        && isVerifiedUser()
+        && existing().status == 'pending'
+        && request.auth.uid == existing().toUid
+        && isValidFriendRequest(incoming(), requestId)
+        && (incoming().status == 'accepted' || incoming().status == 'declined')
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+        && incoming().requestId == existing().requestId
+        && incoming().fromUid == existing().fromUid
+        && incoming().toUid == existing().toUid
+        && incoming().fromCode == existing().fromCode
+        && incoming().toCode == existing().toCode
+        && incoming().participants == existing().participants
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time;
+      allow delete: if isSignedIn() && isValidChatId(requestId) && request.auth.uid in resource.data.participants;
+    }
+
+    // 6. Two-Person Friend Chats
     match /chats/{chatId} {
       allow get: if isSignedIn() && isValidChatId(chatId) && request.auth.uid in resource.data.participants;
       allow list: if isSignedIn() && request.auth.uid in resource.data.participants;
@@ -283,7 +381,7 @@ service cloud.firestore {
         && incoming().updatedAt == request.time;
       allow delete: if false;
 
-      // 6. Chat Messages & Quiz Challenges (Master Gate + Immutable)
+      // 7. Direct Chat Messages & Quiz Challenges (Master Gate + Immutable)
       match /messages/{messageId} {
         allow get: if isSignedIn()
           && isValidChatId(chatId)
@@ -299,6 +397,56 @@ service cloud.firestore {
           && incoming().createdAt == request.time
           && exists(/databases/$(database)/documents/chats/$(chatId))
           && incoming().participants == get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        allow update, delete: if false;
+      }
+    }
+
+    // 8. Group Study Teams (Team Chat Between Accepted Friends)
+    match /teams/{teamId} {
+      allow get: if isSignedIn() && isValidId(teamId) && request.auth.uid in resource.data.memberUids;
+      allow list: if isSignedIn() && request.auth.uid in resource.data.memberUids;
+      allow create: if isValidId(teamId)
+        && isVerifiedUser()
+        && incoming().keys().hasAll(['teamId', 'name', 'ownerUid', 'memberUids', 'lastMessageText', 'lastSenderUid', 'lastSenderName', 'createdAt', 'updatedAt'])
+        && incoming().keys().hasOnly(['teamId', 'name', 'ownerUid', 'memberUids', 'lastMessageText', 'lastSenderUid', 'lastSenderName', 'createdAt', 'updatedAt'])
+        && isValidTeam(incoming(), teamId)
+        && incoming().ownerUid == request.auth.uid
+        && incoming().lastSenderUid == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(teamId)
+        && isVerifiedUser()
+        && request.auth.uid in existing().memberUids
+        && isValidTeam(incoming(), teamId)
+        && incoming().teamId == existing().teamId
+        && incoming().ownerUid == existing().ownerUid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          // Tier 1 (Owner): manage team name, members, or post message
+          (request.auth.uid == existing().ownerUid && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'memberUids', 'lastMessageText', 'lastSenderUid', 'lastSenderName', 'updatedAt'])) ||
+          // Tier 2 (Team Member): post message summary update only
+          (incoming().diff(existing()).affectedKeys().hasOnly(['lastMessageText', 'lastSenderUid', 'lastSenderName', 'updatedAt']) && incoming().lastSenderUid == request.auth.uid)
+        );
+      allow delete: if isSignedIn() && isValidId(teamId) && existing().ownerUid == request.auth.uid;
+
+      // 9. Team Group Chat Messages (Master Gate + Immutable)
+      match /messages/{messageId} {
+        allow get: if isSignedIn()
+          && isValidId(teamId)
+          && isValidId(messageId)
+          && request.auth.uid in get(/databases/$(database)/documents/teams/$(teamId)).data.memberUids;
+        allow list: if isSignedIn()
+          && isValidId(teamId)
+          && request.auth.uid in resource.data.memberUids;
+        allow create: if isValidId(teamId)
+          && isValidId(messageId)
+          && isVerifiedUser()
+          && isValidTeamMessage(incoming())
+          && incoming().createdAt == request.time
+          && exists(/databases/$(database)/documents/teams/$(teamId))
+          && incoming().memberUids == get(/databases/$(database)/documents/teams/$(teamId)).data.memberUids
+          && request.auth.uid in incoming().memberUids;
         allow update, delete: if false;
       }
     }

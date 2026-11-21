@@ -4,7 +4,6 @@ import {
   BookOpen,
   CheckCircle2,
   Circle,
-  Clock,
   ArrowRight,
   HelpCircle,
   Sparkles,
@@ -82,13 +81,13 @@ export const LessonsView: React.FC<LessonsViewProps> = ({
               onSelectLesson(null);
               setReaderTab('text');
             }}
-            className="min-h-[44px] px-4 py-2 rounded-full bg-white border border-slate-200 text-sm font-display font-bold text-[#0F172A] hover:bg-slate-50 flex items-center gap-2 transition-colors"
+            className="min-h-[44px] px-4 py-2 rounded-full bg-surface border border-line text-sm font-display font-bold text-ink hover:bg-surface-alt flex items-center gap-2 transition-colors"
           >
             <ArrowRight className="w-4 h-4" />
             <span>العودة إلى قائمة الدروس</span>
           </button>
 
-          <div className="text-xs sm:text-sm text-slate-600 flex items-center gap-2 tabular-nums">
+          <div className="text-xs sm:text-sm text-ink-muted flex items-center gap-2 tabular-nums">
             <span>{unit?.title}</span>
             <span aria-hidden="true">·</span>
             <span>{activeLesson.branch}</span>
@@ -97,10 +96,10 @@ export const LessonsView: React.FC<LessonsViewProps> = ({
           </div>
         </div>
 
-        <article className="bg-white rounded-[24px] border border-slate-200/80 shadow-sm p-5 sm:p-8 space-y-6">
-          <header className="space-y-2 border-b border-slate-100 pb-5">
+        <article className="bg-surface rounded-[24px] border border-line shadow-sm p-5 sm:p-8 space-y-6">
+          <header className="space-y-2 border-b border-line pb-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-display text-2xl sm:text-3xl font-black text-[#0F172A] text-balance">
+              <h2 className="font-display text-2xl sm:text-3xl font-black text-ink text-balance">
                 {activeLesson.title}
               </h2>
               <div className="flex items-center gap-2 text-sm font-display font-bold">
@@ -110,21 +109,21 @@ export const LessonsView: React.FC<LessonsViewProps> = ({
                     <span>مكتمل</span>
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 text-slate-500">
-                    <Sparkles className="w-4 h-4 text-[#FF5A7A]" />
+                  <span className="inline-flex items-center gap-1.5 text-ink-muted">
+                    <Sparkles className="w-4 h-4 text-brand" />
                     <span className="tabular-nums">+{activeLesson.pointsReward} نقطة عند الإتمام</span>
                   </span>
                 )}
               </div>
             </div>
-            <p className="text-slate-600 text-base leading-relaxed">{activeLesson.summary}</p>
+            <p className="text-ink-muted text-base leading-relaxed">{activeLesson.summary}</p>
           </header>
 
           {/* Segmented Reader Tabs */}
           <div
             role="tablist"
             aria-label="أقسام الدرس"
-            className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl w-full sm:w-fit"
+            className="flex items-center gap-1.5 p-1 bg-surface-alt rounded-xl w-full sm:w-fit border border-line"
           >
             {[
               { id: 'text', label: 'الشرح والنص' },
@@ -139,8 +138,8 @@ export const LessonsView: React.FC<LessonsViewProps> = ({
                 onClick={() => setReaderTab(tab.id as 'text' | 'vocab' | 'rules')}
                 className={`flex-1 sm:flex-initial min-h-[40px] px-4 py-2 rounded-lg text-xs sm:text-sm font-display font-bold whitespace-nowrap transition-colors ${
                   readerTab === tab.id
-                    ? 'bg-white text-[#0F172A] shadow-xs'
-                    : 'text-slate-600 hover:text-[#0F172A]'
+                    ? 'bg-surface text-ink shadow-xs'
+                    : 'text-ink-muted hover:text-ink'
                 }`}
               >
                 {tab.label}
@@ -150,12 +149,12 @@ export const LessonsView: React.FC<LessonsViewProps> = ({
 
           {readerTab === 'text' && (
             <div className="space-y-6">
-              <div className="bg-[#FFF9FA] rounded-2xl p-5 sm:p-6 border border-[#FCE4EC]">
+              <div className="bg-surface-alt rounded-2xl p-5 sm:p-6 border border-line">
                 <h3 className="font-display font-bold text-base text-[#17B8A6] mb-3 flex items-center gap-2">
                   <BookMarked className="w-4 h-4" />
                   <span>{activeLesson.passageTitle}</span>
                 </h3>
-                <div className="space-y-3 text-[#0F172A] text-base sm:text-lg leading-loose font-medium">
+                <div className="space-y-3 text-ink text-base sm:text-lg leading-loose font-medium">
                   {activeLesson.passageLines.map((line, idx) => (
                     <p key={idx}>{line}</p>
                   ))}
@@ -163,12 +162,12 @@ export const LessonsView: React.FC<LessonsViewProps> = ({
               </div>
 
               <div>
-                <h3 className="font-display font-bold text-lg text-[#0F172A] mb-3">
+                <h3 className="font-display font-bold text-lg text-ink mb-3">
                   أهم النقاط المستفادة
                 </h3>
                 <ul className="space-y-2.5">
                   {activeLesson.keyTakeaways.map((point, idx) => (
-                    <li key={idx} className="flex items-start gap-3 text-slate-700 leading-relaxed">
+                    <li key={idx} className="flex items-start gap-3 text-ink leading-relaxed">
                       <span className="font-display font-black text-[#17B8A6] tabular-nums shrink-0">
                         0{idx + 1}.
                       </span>
@@ -184,18 +183,18 @@ export const LessonsView: React.FC<LessonsViewProps> = ({
             <div className="overflow-x-auto">
               <table className="w-full text-right border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 text-xs font-display font-bold text-slate-500">
+                  <tr className="border-b border-line text-xs font-display font-bold text-ink-muted">
                     <th className="py-3 px-4">المصطلح / الكلمة</th>
                     <th className="py-3 px-4">المعنى</th>
                     <th className="py-3 px-4">المضاد</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-sm sm:text-base">
+                <tbody className="divide-y divide-line text-sm sm:text-base">
                   {activeLesson.vocabulary.map((v, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/70">
-                      <td className="py-3.5 px-4 font-display font-bold text-[#0F172A]">{v.word}</td>
-                      <td className="py-3.5 px-4 text-slate-700">{v.meaning}</td>
-                      <td className="py-3.5 px-4 text-slate-500">{v.opposite || '—'}</td>
+                    <tr key={idx} className="hover:bg-surface-alt/60">
+                      <td className="py-3.5 px-4 font-display font-bold text-ink">{v.word}</td>
+                      <td className="py-3.5 px-4 text-ink-muted">{v.meaning}</td>
+                      <td className="py-3.5 px-4 text-ink-muted">{v.opposite || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -208,10 +207,10 @@ export const LessonsView: React.FC<LessonsViewProps> = ({
               {activeLesson.rules.map((rule, idx) => (
                 <div
                   key={idx}
-                  className="p-4 sm:p-5 rounded-2xl bg-[#F7FCFC] border border-[#D4F0ED] space-y-2"
+                  className="p-4 sm:p-5 rounded-2xl bg-surface-alt border border-line space-y-2"
                 >
-                  <h4 className="font-display font-bold text-base text-[#0F172A]">{rule.title}</h4>
-                  <p className="text-sm sm:text-base text-slate-700 leading-relaxed">{rule.detail}</p>
+                  <h4 className="font-display font-bold text-base text-ink">{rule.title}</h4>
+                  <p className="text-sm sm:text-base text-ink-muted leading-relaxed">{rule.detail}</p>
                   <p className="text-sm font-medium text-[#17B8A6] pt-1">
                     مثال تطبيقي: {rule.example}
                   </p>
@@ -220,7 +219,7 @@ export const LessonsView: React.FC<LessonsViewProps> = ({
             </div>
           )}
 
-          <footer className="pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <footer className="pt-5 border-t border-line flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <button
               type="button"
               onClick={() => onToggleLessonComplete(activeLesson)}
@@ -241,7 +240,7 @@ export const LessonsView: React.FC<LessonsViewProps> = ({
             <button
               type="button"
               onClick={() => onQuizLesson(activeLesson)}
-              className="min-h-[48px] px-6 py-3 rounded-full bg-[#0F172A] text-white font-display font-black text-sm sm:text-base flex items-center justify-center gap-2 shadow-sm hover:bg-[#1E293B]"
+              className="min-h-[48px] px-6 py-3 rounded-full bg-primary-btn text-primary-btn-ink font-display font-black text-sm sm:text-base flex items-center justify-center gap-2 shadow-sm hover:opacity-90"
             >
               <HelpCircle className="w-5 h-5 text-[#FFD93D]" />
               <span>اختبر نفسك في هذا الدرس ({activeLesson.questions.length} أسئلة)</span>
@@ -268,10 +267,10 @@ export const LessonsView: React.FC<LessonsViewProps> = ({
                 onSelectSubject(subject.id);
                 onSelectUnitFilter('all');
               }}
-              className={`min-h-[44px] px-4 py-2 rounded-full font-display font-extrabold text-sm whitespace-nowrap shrink-0 transition-colors inline-flex items-center gap-1.5 ${
+              className={`min-h-[44px] px-4 py-2 rounded-full font-display font-extrabold text-sm whitespace-nowrap shrink-0 transition-colors inline-flex items-center gap-1.5 border ${
                 isActive
-                  ? 'bg-[#0F172A] text-white'
-                  : 'bg-[#EDEDEF] text-[#1A2E3A] hover:bg-[#E2E4E8]'
+                  ? 'bg-primary-btn text-primary-btn-ink border-transparent'
+                  : 'bg-surface text-ink border-line hover:bg-surface-alt'
               }`}
             >
               <span aria-hidden="true">{subject.emoji}</span>
@@ -283,20 +282,20 @@ export const LessonsView: React.FC<LessonsViewProps> = ({
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl font-black text-[#0F172A]">
+          <h2 className="font-display text-2xl font-black text-ink">
             دروس {activeSubject.name}
           </h2>
-          <p className="text-sm text-slate-600 mt-0.5">{activeSubject.desc}</p>
+          <p className="text-sm text-ink-muted mt-0.5">{activeSubject.desc}</p>
         </div>
 
         <div className="relative w-full md:w-72">
-          <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-4 h-4 text-ink-muted absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="ابحث عن درس..."
-            className="w-full min-h-[44px] pr-10 pl-4 py-2 rounded-full bg-white border border-slate-200 text-sm text-[#0F172A] placeholder:text-slate-400 focus:outline-none focus:border-[#0F172A]"
+            className="w-full min-h-[44px] pr-10 pl-4 py-2 rounded-full bg-surface border border-line text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:border-brand"
           />
         </div>
       </div>
@@ -308,8 +307,8 @@ export const LessonsView: React.FC<LessonsViewProps> = ({
           onClick={() => onSelectUnitFilter('all')}
           className={`min-h-[40px] px-4 py-2 rounded-full text-xs sm:text-sm font-display font-bold whitespace-nowrap shrink-0 transition-colors ${
             selectedUnitId === 'all'
-              ? 'bg-[#FF5A7A] text-white'
-              : 'bg-white text-slate-600 border border-slate-200 hover:text-[#0F172A]'
+              ? 'bg-brand text-white'
+              : 'bg-surface text-ink-muted border border-line hover:text-ink'
           }`}
         >
           جميع الوحدات ({totalSubjectLessons})
@@ -324,8 +323,8 @@ export const LessonsView: React.FC<LessonsViewProps> = ({
               onClick={() => onSelectUnitFilter(u.id)}
               className={`min-h-[40px] px-4 py-2 rounded-full text-xs sm:text-sm font-display font-bold whitespace-nowrap shrink-0 transition-colors ${
                 isSelected
-                  ? 'bg-[#FF5A7A] text-white'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:text-[#0F172A]'
+                  ? 'bg-brand text-white'
+                  : 'bg-surface text-ink-muted border border-line hover:text-ink'
               }`}
             >
               {u.title}
@@ -336,10 +335,10 @@ export const LessonsView: React.FC<LessonsViewProps> = ({
 
       {/* Lessons Grid */}
       {filteredLessons.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-8 text-center space-y-2">
-          <BookOpen className="w-10 h-10 text-slate-400 mx-auto" />
-          <p className="font-display font-bold text-[#0F172A]">لم يتم العثور على دروس مطابقة</p>
-          <p className="text-sm text-slate-500">جرّب كلمة بحث أخرى أو اختر جميع الوحدات</p>
+        <div className="bg-surface rounded-2xl border border-line p-8 text-center space-y-2">
+          <BookOpen className="w-10 h-10 text-ink-muted mx-auto" />
+          <p className="font-display font-bold text-ink">لم يتم العثور على دروس مطابقة</p>
+          <p className="text-sm text-ink-muted">جرّب كلمة بحث أخرى أو اختر جميع الوحدات</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -350,16 +349,16 @@ export const LessonsView: React.FC<LessonsViewProps> = ({
             return (
               <div
                 key={lesson.id}
-                className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 hover:border-[#FF5A7A]/60 hover:shadow-md transition-all flex flex-col justify-between gap-4"
+                className="bg-surface rounded-2xl border border-line p-4 sm:p-5 hover:border-brand/60 hover:shadow-md transition-all flex flex-col justify-between gap-4"
               >
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2 text-xs text-slate-500">
+                  <div className="flex items-center justify-between gap-2 text-xs text-ink-muted">
                     <span className="font-medium truncate">
                       {unit?.title} · {lesson.branch}
                     </span>
                     <span
                       className={`inline-flex items-center gap-1 font-display font-bold shrink-0 ${
-                        isCompleted ? 'text-[#17B8A6]' : 'text-slate-500'
+                        isCompleted ? 'text-[#17B8A6]' : 'text-ink-muted'
                       }`}
                     >
                       {isCompleted ? (
@@ -376,15 +375,15 @@ export const LessonsView: React.FC<LessonsViewProps> = ({
                     </span>
                   </div>
 
-                  <h3 className="font-display font-black text-lg text-[#0F172A] leading-snug">
+                  <h3 className="font-display font-black text-lg text-ink leading-snug">
                     {lesson.title}
                   </h3>
-                  <p className="text-sm text-slate-600 leading-relaxed line-clamp-2">
+                  <p className="text-sm text-ink-muted leading-relaxed line-clamp-2">
                     {lesson.summary}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2.5 pt-2 border-t border-slate-100">
+                <div className="flex items-center gap-2.5 pt-2 border-t border-line">
                   <button
                     type="button"
                     onClick={() => onSelectLesson(lesson.id)}
@@ -397,7 +396,7 @@ export const LessonsView: React.FC<LessonsViewProps> = ({
                   <button
                     type="button"
                     onClick={() => onQuizLesson(lesson)}
-                    className="flex-1 min-h-[40px] px-3 py-2 rounded-full bg-[#0F172A] text-white font-display font-extrabold text-xs sm:text-sm hover:bg-[#1E293B] flex items-center justify-center gap-1.5"
+                    className="flex-1 min-h-[40px] px-3 py-2 rounded-full bg-primary-btn text-primary-btn-ink font-display font-extrabold text-xs sm:text-sm hover:opacity-90 flex items-center justify-center gap-1.5"
                   >
                     <HelpCircle className="w-4 h-4 text-[#FFD93D]" />
                     <span>اختبر نفسك</span>

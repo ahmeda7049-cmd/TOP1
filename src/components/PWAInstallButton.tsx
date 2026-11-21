@@ -70,14 +70,14 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
   return (
     <>
       {variant === 'card' ? (
-        <div className="bg-white rounded-[22px] p-5 border border-slate-200/80 shadow-[0_4px_14px_rgba(0,0,0,0.06)] space-y-3.5">
+        <div className="bg-surface rounded-[22px] p-5 border border-line shadow-[0_4px_14px_rgba(0,0,0,0.06)] space-y-3.5">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1">
-              <h2 className="font-display text-lg font-black text-[#0F172A] flex items-center gap-2">
-                <Smartphone className="w-5 h-5 text-[#FF5A7A]" aria-hidden="true" />
+              <h2 className="font-display text-lg font-black text-ink flex items-center gap-2">
+                <Smartphone className="w-5 h-5 text-brand" aria-hidden="true" />
                 <span>تثبيت TOP1 كتطبيق وإرساله لأصحابك</span>
               </h2>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
                 {isInstalled
                   ? 'التطبيق مثبت بالفعل على جهازك! تقدر تبعت رابط TOP1 لأصحابك على واتساب عشان يثبتوه ويتنافسوا معاك.'
                   : 'ثبّت TOP1 على موبايلك كتطبيق مستقل بدون متصفح (أو صدّره كملف APK)، وابعته لأصحابك.'}
@@ -90,7 +90,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
               <button
                 type="button"
                 onClick={handleInstallClick}
-                className="min-h-[44px] px-4 py-2 rounded-full bg-[#0F172A] text-white font-display font-extrabold text-xs sm:text-sm hover:bg-[#1E293B] active:scale-[0.98] transition-all inline-flex items-center gap-2 whitespace-nowrap shrink-0"
+                className="min-h-[44px] px-4 py-2 rounded-full bg-primary-btn text-primary-btn-ink font-display font-extrabold text-xs sm:text-sm hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2 whitespace-nowrap shrink-0"
               >
                 <Download className="w-4 h-4 text-[#FFD93D]" aria-hidden="true" />
                 <span>
@@ -125,7 +125,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
               href={whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="min-h-[44px] px-4 py-2 rounded-full border border-slate-200 bg-white text-[#0F172A] font-display font-bold text-xs sm:text-sm hover:bg-slate-50 transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0"
+              className="min-h-[44px] px-4 py-2 rounded-full border border-line bg-surface-alt text-ink font-display font-bold text-xs sm:text-sm hover:opacity-90 transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0"
             >
               <span>إرسال عبر واتساب</span>
             </a>
@@ -137,7 +137,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
             <button
               type="button"
               onClick={handleInstallClick}
-              className="min-h-[44px] px-4 py-2 rounded-full bg-[#0F172A] text-white font-display font-extrabold text-xs sm:text-sm hover:bg-[#1E293B] transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0"
+              className="min-h-[44px] px-4 py-2 rounded-full bg-primary-btn text-primary-btn-ink font-display font-extrabold text-xs sm:text-sm hover:opacity-90 transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0"
             >
               <Download className="w-4 h-4 text-[#FFD93D]" aria-hidden="true" />
               <span>{isInstallable ? 'تثبيت TOP1' : 'تثبيت كتطبيق / APK'}</span>
@@ -146,7 +146,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
           <button
             type="button"
             onClick={handleShareApp}
-            className="min-h-[44px] px-4 py-2 rounded-full border border-slate-200 bg-white text-[#0F172A] font-display font-bold text-xs sm:text-sm hover:bg-slate-50 transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0"
+            className="min-h-[44px] px-4 py-2 rounded-full border border-line bg-surface-alt text-ink font-display font-bold text-xs sm:text-sm hover:opacity-90 transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0"
           >
             {copied ? (
               <>
@@ -155,7 +155,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
               </>
             ) : (
               <>
-                <Share2 className="w-4 h-4 text-[#FF5A7A]" aria-hidden="true" />
+                <Share2 className="w-4 h-4 text-brand" aria-hidden="true" />
                 <span>ابعت لأصحابك</span>
               </>
             )}
@@ -170,30 +170,30 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
           aria-labelledby="pwa-guide-title"
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4"
         >
-          <div className="w-full max-w-md bg-white rounded-[24px] p-5 sm:p-6 shadow-2xl border border-slate-200 space-y-4 text-right">
+          <div className="w-full max-w-md bg-surface text-ink rounded-[24px] p-5 sm:p-6 shadow-2xl border border-line space-y-4 text-right">
             <div className="flex items-center justify-between gap-3">
-              <h3 id="pwa-guide-title" className="font-display text-lg font-black text-[#0F172A]">
+              <h3 id="pwa-guide-title" className="font-display text-lg font-black text-ink">
                 تثبيت TOP1 على الموبايل أو استخراج APK
               </h3>
               <button
                 type="button"
                 onClick={() => setShowGuideModal(false)}
                 aria-label="إغلاق"
-                className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700"
+                className="w-10 h-10 rounded-full bg-surface-alt hover:opacity-80 flex items-center justify-center text-ink"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {isIOS ? (
-              <div className="bg-slate-50 rounded-2xl p-4 space-y-2 text-sm text-slate-700 leading-relaxed">
-                <p className="font-display font-bold text-[#0F172A]">على آيفون وآيباد (Safari):</p>
+              <div className="bg-surface-alt rounded-2xl p-4 space-y-2 text-sm text-ink leading-relaxed">
+                <p className="font-display font-bold text-ink">على آيفون وآيباد (Safari):</p>
                 <p>1. اضغط على زر <strong>المشاركة (Share)</strong> أسفل المتصفح.</p>
                 <p>2. اختر <strong>إضافة إلى الشاشة الرئيسية (Add to Home Screen)</strong>.</p>
               </div>
             ) : (
-              <div className="bg-slate-50 rounded-2xl p-4 space-y-2 text-sm text-slate-700 leading-relaxed">
-                <p className="font-display font-bold text-[#0F172A]">
+              <div className="bg-surface-alt rounded-2xl p-4 space-y-2 text-sm text-ink leading-relaxed">
+                <p className="font-display font-bold text-ink">
                   {isAndroid ? 'على أندرويد (Chrome):' : 'لتثبيت التطبيق مباشرة على الموبايل:'}
                 </p>
                 <p>
@@ -202,9 +202,9 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
                 <p>
                   2. اضغط قائمة المتصفح (⋮) ثم اختر <strong>تثبيت التطبيق (Install app)</strong> ليظهر بأيقونة TOP1 ويعمل بدون إنترنت.
                 </p>
-                <p className="pt-1 text-xs text-slate-500">
+                <p className="pt-1 text-xs text-ink-muted">
                   لو عايز ملف <strong>.apk</strong> جاهز تبعته كملف على تليجرام أو واتساب: انسخ رابط TOP1 أدناه واستخدمه مجاناً في موقع{' '}
-                  <span dir="ltr" className="font-bold text-[#0F172A]">
+                  <span dir="ltr" className="font-bold text-ink">
                     pwabuilder.com
                   </span>{' '}
                   لتوليد ملف Android APK في دقيقة واحدة.
@@ -212,14 +212,14 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
               </div>
             )}
 
-            <div className="flex items-center gap-2 bg-slate-100 rounded-xl p-2.5">
-              <span dir="ltr" className="text-xs text-slate-700 truncate flex-1 font-mono">
+            <div className="flex items-center gap-2 bg-surface-alt rounded-xl p-2.5 border border-line">
+              <span dir="ltr" className="text-xs text-ink truncate flex-1 font-mono">
                 {shareUrl}
               </span>
               <button
                 type="button"
                 onClick={handleShareApp}
-                className="min-h-[38px] px-3 py-1.5 rounded-lg bg-[#0F172A] text-white text-xs font-display font-bold inline-flex items-center gap-1.5 shrink-0"
+                className="min-h-[38px] px-3 py-1.5 rounded-lg bg-primary-btn text-primary-btn-ink text-xs font-display font-bold inline-flex items-center gap-1.5 shrink-0"
               >
                 <Copy className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>{copied ? 'تم النسخ' : 'نسخ'}</span>
@@ -238,7 +238,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
               <button
                 type="button"
                 onClick={() => setShowGuideModal(false)}
-                className="min-h-[44px] px-5 rounded-full bg-slate-100 text-[#0F172A] font-display font-bold text-sm"
+                className="min-h-[44px] px-5 rounded-full bg-surface-alt text-ink border border-line font-display font-bold text-sm"
               >
                 إغلاق
               </button>

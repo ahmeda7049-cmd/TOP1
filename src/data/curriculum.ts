@@ -104,6 +104,23 @@ export const INITIAL_PROGRESS: StudentProgress = {
   readNotificationIds: [],
 };
 
+export interface LeaderboardEntry {
+  id: string;
+  name: string;
+  avatar: string;
+  points: number;
+  isMe?: boolean;
+  isFriend?: boolean;
+}
+
+export const LEADERBOARD_PEERS: LeaderboardEntry[] = [
+  { id: 'p1', name: 'مريم طارق', avatar: '👩‍🎓', points: 420 },
+  { id: 'p2', name: 'يوسف خالد', avatar: '🧑‍💻', points: 310 },
+  { id: 'p3', name: 'سلمى حسام', avatar: '📚', points: 215 },
+  { id: 'p4', name: 'عمر شريف', avatar: '✍️', points: 130 },
+  { id: 'p5', name: 'نور الهدى', avatar: '🌟', points: 65 },
+];
+
 export function getTodayKey(): string {
   const now = new Date();
   const y = now.getFullYear();

@@ -1,24 +1,102 @@
 @import "tailwindcss";
 
+@theme inline {
+  --color-canvas: var(--app-canvas);
+  --color-surface: var(--app-surface);
+  --color-surface-alt: var(--app-surface-alt);
+  --color-ink: var(--app-ink);
+  --color-ink-muted: var(--app-ink-muted);
+  --color-line: var(--app-border);
+  --color-brand: var(--app-accent);
+  --color-primary-btn: var(--app-btn-primary);
+  --color-primary-btn-ink: var(--app-btn-primary-ink);
+}
+
 @layer base {
-  :root {
+  :root,
+  :root[data-theme="sunset"] {
     --font-display: 'Cairo', system-ui, -apple-system, sans-serif;
     --font-body: 'Tajawal', system-ui, -apple-system, sans-serif;
-    --surface-canvas: #FFF9FA;
-    --ink-primary: #1A2E3A;
-    --brand-teal: #1AC2B5;
-    --brand-teal-deep: #17B8A6;
-    --brand-pink: #FF8FAB;
-    --brand-pink-soft: #FFA9BC;
-    --brand-aqua: #A8E6E0;
-    --brand-gold: #FFD93D;
+    --app-canvas: #FFE4EC;
+    --app-surface: #FFF4F7;
+    --app-surface-alt: #FFEAF0;
+    --app-border: #F7BDD0;
+    --app-ink: #1A132B;
+    --app-ink-muted: #5C496E;
+    --app-accent: #E11D48;
+    --app-btn-primary: #1E1B4B;
+    --app-btn-primary-ink: #FFFFFF;
+    --app-header-grad: linear-gradient(90deg, #1E1B4B 0%, #BE185D 65%, #FF5A7A 100%);
+    --app-cta-grad: linear-gradient(90deg, #1E1B4B, #FF5A7A);
+    --app-banner-bg: #1E1B4B;
+  }
+
+  :root[data-theme="ocean"] {
+    --app-canvas: #D6EEFF;
+    --app-surface: #ECF7FF;
+    --app-surface-alt: #DDF0FE;
+    --app-border: #9BD3FA;
+    --app-ink: #0C2340;
+    --app-ink-muted: #35587D;
+    --app-accent: #0284C7;
+    --app-btn-primary: #073B6B;
+    --app-btn-primary-ink: #FFFFFF;
+    --app-header-grad: linear-gradient(90deg, #082F49 0%, #0369A1 65%, #0EA5E9 100%);
+    --app-cta-grad: linear-gradient(90deg, #082F49, #0284C7);
+    --app-banner-bg: #082F49;
+  }
+
+  :root[data-theme="mint"] {
+    --app-canvas: #D2F7E7;
+    --app-surface: #EBFEF5;
+    --app-surface-alt: #DCFCEB;
+    --app-border: #8BE6BE;
+    --app-ink: #052E24;
+    --app-ink-muted: #285F50;
+    --app-accent: #0D9488;
+    --app-btn-primary: #064E3B;
+    --app-btn-primary-ink: #FFFFFF;
+    --app-header-grad: linear-gradient(90deg, #042F2E 0%, #0F766E 65%, #14B8A6 100%);
+    --app-cta-grad: linear-gradient(90deg, #042F2E, #0D9488);
+    --app-banner-bg: #042F2E;
+  }
+
+  :root[data-theme="lavender"] {
+    --app-canvas: #E9DDFD;
+    --app-surface: #F5F0FF;
+    --app-surface-alt: #ECE3FF;
+    --app-border: #C4B5FD;
+    --app-ink: #220E47;
+    --app-ink-muted: #584085;
+    --app-accent: #7C3AED;
+    --app-btn-primary: #3B0764;
+    --app-btn-primary-ink: #FFFFFF;
+    --app-header-grad: linear-gradient(90deg, #2E1065 0%, #6D28D9 65%, #9333EA 100%);
+    --app-cta-grad: linear-gradient(90deg, #2E1065, #7C3AED);
+    --app-banner-bg: #2E1065;
+  }
+
+  :root[data-theme="midnight"] {
+    --app-canvas: #0B1222;
+    --app-surface: #141F38;
+    --app-surface-alt: #1C2B4B;
+    --app-border: #2D406B;
+    --app-ink: #F8FAFC;
+    --app-ink-muted: #B6C7E3;
+    --app-accent: #38BDF8;
+    --app-btn-primary: #38BDF8;
+    --app-btn-primary-ink: #061224;
+    --app-header-grad: linear-gradient(90deg, #070C18 0%, #1D4ED8 65%, #38BDF8 100%);
+    --app-cta-grad: linear-gradient(90deg, #2563EB, #06B6D4);
+    --app-banner-bg: #1B2947;
   }
 
   html {
     font-family: var(--font-body);
-    background-color: var(--surface-canvas);
-    color: var(--ink-primary);
+    background-color: var(--app-canvas);
+    color: var(--app-ink);
     scroll-behavior: smooth;
+    transition: background-color 200ms ease, color 200ms ease;
   }
 
   h1, h2, h3, h4, .font-display {

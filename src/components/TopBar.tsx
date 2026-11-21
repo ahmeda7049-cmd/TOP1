@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, BookOpen, HelpCircle, User, Home, Users } from 'lucide-react';
-import { AppNotification, TabId } from '../types';
+import { Bell, BookOpen, HelpCircle, User, Home, Users, Palette, Check } from 'lucide-react';
+import { AppNotification, AppThemeId, TabId } from '../types';
+import { APP_THEMES } from '../data/themes';
 
 interface TopBarProps {
   activeTab: TabId;
@@ -12,6 +13,8 @@ interface TopBarProps {
   onMarkNotificationRead: (id: string) => void;
   onNotificationNavigate: (notification: AppNotification) => void;
   onStartFeaturedQuiz: () => void;
+  currentTheme: AppThemeId;
+  onSelectTheme: (theme: AppThemeId) => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -24,16 +27,28 @@ export const TopBar: React.FC<TopBarProps> = ({
   onMarkNotificationRead,
   onNotificationNavigate,
   onStartFeaturedQuiz,
+  currentTheme,
+  onSelectTheme,
 }) => {
   const [notifOpen, setNotifOpen] = useState(false);
-  const notifRef = useRef<HTMLDivElement>(null);
+  const [themeOpen, setThemeOpen] = useState(false);
+  const mobileNotifRef = useRef<HTMLDivElement>(null);
+  const desktopNotifRef = useRef<HTMLDivElement>(null);
+  const mobileThemeRef = useRef<HTMLDivElement>(null);
 
   const unreadCount = notifications.filter((n) => !readNotificationIds.includes(n.id)).length;
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const inMobileNotif = mobileNotifRef.current?.contains(target);
+      const inDesktopNotif = desktopNotifRef.current?.contains(target);
+      const inMobileTheme = mobileThemeRef.current?.contains(target);
+      if (!inMobileNotif && !inDesktopNotif) {
         setNotifOpen(false);
+      }
+      if (!inMobileTheme && !inDesktopNotif) {
+        setThemeOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -51,19 +66,33 @@ export const TopBar: React.FC<TopBarProps> = ({
   return (
     <>
       {/* Mobile Header (< lg) matching TOP1 gradient capsule */}
-      <header className="lg:hidden sticky top-0 z-30 px-3 pt-2 pb-1 bg-[#FFF9FA]/95 backdrop-blur-md">
+      <header className="lg:hidden sticky top-0 z-30 px-3 pt-2 pb-1 bg-canvas/95 backdrop-blur-md">
         <div
           className="rounded-[28px] px-4 py-2.5 flex items-center justify-between text-white shadow-sm"
-          style={{ background: 'linear-gradient(90deg, #0F172A, #FF5A7A)' }}
+          style={{ background: 'var(--app-header-grad)' }}
         >
-          <button
-            type="button"
-            onClick={() => onSelectTab('quizzes')}
-            aria-label="الاختبارات والتحديات"
-            className="w-11 h-11 rounded-full flex items-center justify-center text-xl hover:bg-white/15 transition-colors focus-visible:outline-2 focus-visible:outline-white"
-          >
-            <span aria-hidden="true">🏆</span>
-          </button>
+          <div className="flex items-center gap-0.5" ref={mobileThemeRef}>
+            <button
+              type="button"
+              onClick={() => onSelectTab('quizzes')}
+              aria-label="الاختبارات والتحديات"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-xl hover:bg-white/15 transition-colors focus-visible:outline-2 focus-visible:outline-white"
+            >
+              <span aria-hidden="true">🏆</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setThemeOpen((prev) => !prev);
+                setNotifOpen(false);
+              }}
+              aria-label="تغيير لون التطبيق"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/15 transition-colors"
+            >
+              <Palette className="w-4 h-4" />
+            </button>
+          </div>
 
           <button
             type="button"
@@ -81,10 +110,13 @@ export const TopBar: React.FC<TopBarProps> = ({
             </div>
           </button>
 
-          <div className="flex items-center gap-0.5" ref={notifRef}>
+          <div className="flex items-center gap-0.5" ref={mobileNotifRef}>
             <button
               type="button"
-              onClick={() => setNotifOpen((prev) => !prev)}
+              onClick={() => {
+                setNotifOpen((prev) => !prev);
+                setThemeOpen(false);
+              }}
               aria-label="الإشعارات"
               className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/15 transition-colors relative"
             >
@@ -107,15 +139,62 @@ export const TopBar: React.FC<TopBarProps> = ({
           </div>
         </div>
 
+        {/* Mobile Theme Picker Dropdown */}
+        {themeOpen && (
+          <div className="mt-2 bg-surface text-ink rounded-2xl shadow-lg border border-line p-3 z-40 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-display font-bold text-sm">اختر لون التطبيق</span>
+              <button
+                type="button"
+                onClick={() => setThemeOpen(false)}
+                className="text-xs text-ink-muted hover:text-ink px-2 py-1"
+              >
+                إغلاق
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {APP_THEMES.map((t) => {
+                const isSelected = currentTheme === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => {
+                      onSelectTheme(t.id);
+                      setThemeOpen(false);
+                    }}
+                    className={`min-h-[42px] px-3 py-2 rounded-xl border text-xs font-display font-bold flex items-center justify-between gap-2 ${
+                      isSelected
+                        ? 'border-ink bg-surface-alt text-ink'
+                        : 'border-line bg-surface text-ink-muted'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2 truncate">
+                      <span
+                        className="w-4 h-4 rounded-full border border-black/15 shrink-0"
+                        style={{
+                          background: `linear-gradient(135deg, ${t.swatchBg} 45%, ${t.swatchAccent} 100%)`,
+                        }}
+                      />
+                      <span className="truncate">{t.label}</span>
+                    </span>
+                    {isSelected && <Check className="w-3.5 h-3.5 text-brand shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Mobile Notifications Dropdown */}
         {notifOpen && (
-          <div className="mt-2 bg-white rounded-2xl shadow-lg border border-slate-200/80 p-3 z-40">
-            <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
-              <span className="font-display font-bold text-sm text-[#0F172A]">التنبيهات الدراسية</span>
+          <div className="mt-2 bg-surface text-ink rounded-2xl shadow-lg border border-line p-3 z-40">
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-line">
+              <span className="font-display font-bold text-sm text-ink">التنبيهات الدراسية</span>
               <button
                 type="button"
                 onClick={() => setNotifOpen(false)}
-                className="text-xs text-slate-500 hover:text-[#0F172A] px-2 py-1"
+                className="text-xs text-ink-muted hover:text-ink px-2 py-1"
               >
                 إغلاق
               </button>
@@ -133,14 +212,14 @@ export const TopBar: React.FC<TopBarProps> = ({
                       setNotifOpen(false);
                     }}
                     className={`w-full text-right p-2.5 rounded-xl transition-colors flex flex-col gap-1 ${
-                      isRead ? 'bg-slate-50 text-slate-600' : 'bg-[#FFF3F6] text-[#0F172A]'
+                      isRead ? 'bg-surface-alt/70 text-ink-muted' : 'bg-surface-alt text-ink border border-line'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-display font-bold text-sm">{n.title}</span>
-                      <span className="text-[11px] text-slate-500 shrink-0">{n.timeLabel}</span>
+                      <span className="text-[11px] text-ink-muted shrink-0">{n.timeLabel}</span>
                     </div>
-                    <p className="text-xs text-slate-600 leading-relaxed">{n.body}</p>
+                    <p className="text-xs text-ink-muted leading-relaxed">{n.body}</p>
                   </button>
                 );
               })}
@@ -152,7 +231,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       {/* Desktop Top Navigation Bar (lg:) - clean 3-zone contract */}
       <header
         className="hidden lg:block sticky top-0 z-30 text-white shadow-sm"
-        style={{ background: 'linear-gradient(90deg, #0F172A 0%, #1E293B 55%, #FF5A7A 100%)' }}
+        style={{ background: 'var(--app-header-grad)' }}
       >
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-8">
           {/* Zone 1: Brand Title */}
@@ -169,7 +248,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             </span>
           </button>
 
-          {/* Zone 2: 4 Single-Line Nav Links */}
+          {/* Zone 2: Single-Line Nav Links */}
           <nav className="flex items-center gap-7" aria-label="التنقل الرئيسي">
             {navItems.map((item) => {
               const isActive = activeTab === item.id;
@@ -190,11 +269,26 @@ export const TopBar: React.FC<TopBarProps> = ({
             })}
           </nav>
 
-          {/* Zone 3: 1 Primary CTA + Notifications */}
-          <div className="flex items-center gap-3 shrink-0 relative" ref={notifRef}>
+          {/* Zone 3: Theme + Notifications + Primary CTA */}
+          <div className="flex items-center gap-2.5 shrink-0 relative" ref={desktopNotifRef}>
             <button
               type="button"
-              onClick={() => setNotifOpen((prev) => !prev)}
+              onClick={() => {
+                setThemeOpen((prev) => !prev);
+                setNotifOpen(false);
+              }}
+              aria-label="تغيير لون التطبيق"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/15 transition-colors"
+            >
+              <Palette className="w-5 h-5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setNotifOpen((prev) => !prev);
+                setThemeOpen(false);
+              }}
               aria-label="الإشعارات"
               className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/15 transition-colors relative"
             >
@@ -214,11 +308,50 @@ export const TopBar: React.FC<TopBarProps> = ({
               ابدأ الاختبار
             </button>
 
+            {themeOpen && (
+              <div className="hidden lg:block absolute left-0 top-12 w-64 bg-surface text-ink rounded-2xl shadow-xl border border-line p-3 z-50 space-y-2">
+                <div className="font-display font-bold text-xs text-ink pb-1.5 border-b border-line">
+                  اختر لون التطبيق (5 ألوان)
+                </div>
+                <div className="space-y-1.5">
+                  {APP_THEMES.map((t) => {
+                    const isSelected = currentTheme === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => {
+                          onSelectTheme(t.id);
+                          setThemeOpen(false);
+                        }}
+                        className={`w-full min-h-[40px] px-3 py-1.5 rounded-xl border text-xs font-display font-bold flex items-center justify-between gap-2 transition-colors ${
+                          isSelected
+                            ? 'border-ink bg-surface-alt text-ink'
+                            : 'border-line bg-surface text-ink-muted hover:text-ink hover:bg-surface-alt'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2.5">
+                          <span
+                            className="w-4 h-4 rounded-full border border-black/15 shrink-0"
+                            style={{
+                              background: `linear-gradient(135deg, ${t.swatchBg} 45%, ${t.swatchAccent} 100%)`,
+                            }}
+                          />
+                          <span>{t.label}</span>
+                        </span>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-brand" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {notifOpen && (
-              <div className="hidden lg:block absolute left-0 top-12 w-80 bg-white text-[#0F172A] rounded-2xl shadow-xl border border-slate-200/80 p-3 z-50">
-                <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+              <div className="hidden lg:block absolute left-0 top-12 w-80 bg-surface text-ink rounded-2xl shadow-xl border border-line p-3 z-50">
+                <div className="flex items-center justify-between pb-2 mb-2 border-b border-line">
                   <span className="font-display font-bold text-sm">التنبيهات الدراسية</span>
-                  <span className="text-xs text-slate-500 tabular-nums">{points} نقطة</span>
+                  <span className="text-xs text-ink-muted tabular-nums">{points} نقطة</span>
                 </div>
                 <div className="space-y-2">
                   {notifications.map((n) => {
@@ -233,14 +366,16 @@ export const TopBar: React.FC<TopBarProps> = ({
                           setNotifOpen(false);
                         }}
                         className={`w-full text-right p-2.5 rounded-xl transition-colors flex flex-col gap-1 ${
-                          isRead ? 'bg-slate-50 text-slate-600' : 'bg-[#FFF3F6] text-[#0F172A] hover:bg-[#FFE6EC]'
+                          isRead
+                            ? 'bg-surface-alt/70 text-ink-muted'
+                            : 'bg-surface-alt text-ink border border-line'
                         }`}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-display font-bold text-xs">{n.title}</span>
-                          <span className="text-[11px] text-slate-500 shrink-0">{n.timeLabel}</span>
+                          <span className="text-[11px] text-ink-muted shrink-0">{n.timeLabel}</span>
                         </div>
-                        <p className="text-xs text-slate-600 leading-relaxed">{n.body}</p>
+                        <p className="text-xs text-ink-muted leading-relaxed">{n.body}</p>
                       </button>
                     );
                   })}

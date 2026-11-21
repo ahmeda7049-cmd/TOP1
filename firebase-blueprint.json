@@ -86,7 +86,7 @@
     },
     "PublicProfile": {
       "title": "PublicProfile",
-      "description": "Public non-PII student score profile for friends leaderboard and display.",
+      "description": "Public non-PII student score profile for friends discovery and honor board.",
       "type": "object",
       "properties": {
         "uid": {
@@ -120,12 +120,15 @@
         "completedCount": {
           "type": "integer"
         },
+        "isDiscoverable": {
+          "type": "boolean"
+        },
         "updatedAt": {
           "type": "string",
           "format": "date-time"
         }
       },
-      "required": ["uid", "displayName", "avatarEmoji", "friendCode", "points", "streakDays", "completedCount", "updatedAt"]
+      "required": ["uid", "displayName", "avatarEmoji", "friendCode", "points", "streakDays", "completedCount", "isDiscoverable", "updatedAt"]
     },
     "FriendCodeLookup": {
       "title": "FriendCodeLookup",
@@ -164,6 +167,93 @@
         }
       },
       "required": ["code", "uid", "displayName", "avatarEmoji", "createdAt", "updatedAt"]
+    },
+    "FriendRequest": {
+      "title": "FriendRequest",
+      "description": "Two-way friend request between TOP1 students before chatting or teaming up.",
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 260,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "fromUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "toUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "fromName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "fromAvatar": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "fromCode": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 10,
+          "pattern": "^[A-Z0-9]{6,10}$"
+        },
+        "toName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "toAvatar": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "toCode": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 10,
+          "pattern": "^[A-Z0-9]{6,10}$"
+        },
+        "participants": {
+          "type": "array"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "accepted", "declined"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "requestId",
+        "fromUid",
+        "toUid",
+        "fromName",
+        "fromAvatar",
+        "fromCode",
+        "toName",
+        "toAvatar",
+        "toCode",
+        "participants",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
     },
     "FriendChat": {
       "title": "FriendChat",
@@ -297,6 +387,123 @@
         }
       },
       "required": ["senderUid", "senderName", "senderAvatar", "participants", "type", "text", "createdAt"]
+    },
+    "StudyTeam": {
+      "title": "StudyTeam",
+      "description": "Group study team chat connecting a student and their accepted friends.",
+      "type": "object",
+      "properties": {
+        "teamId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50
+        },
+        "ownerUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "memberUids": {
+          "type": "array"
+        },
+        "lastMessageText": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "lastSenderUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "lastSenderName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "teamId",
+        "name",
+        "ownerUid",
+        "memberUids",
+        "lastMessageText",
+        "lastSenderUid",
+        "lastSenderName",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "TeamMessage": {
+      "title": "TeamMessage",
+      "description": "Immutable message or challenge sent inside a study team group chat.",
+      "type": "object",
+      "properties": {
+        "senderUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "senderName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "senderAvatar": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "memberUids": {
+          "type": "array"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["text", "challenge"]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "quizId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "quizTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "subjectId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 30
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["senderUid", "senderName", "senderAvatar", "memberUids", "type", "text", "createdAt"]
     }
   },
   "firestore": {
@@ -306,15 +513,19 @@
     },
     "/users/{userId}/friends/{friendUid}": {
       "schema": { "$ref": "#/entities/FriendLink" },
-      "description": "Owner-scoped list of added friends."
+      "description": "Owner-scoped list of accepted friends."
     },
     "/profiles/{userId}": {
       "schema": { "$ref": "#/entities/PublicProfile" },
-      "description": "Non-PII public score card for point-lookup by friends."
+      "description": "Non-PII public score card for discovery and honor board."
     },
     "/friendCodes/{code}": {
       "schema": { "$ref": "#/entities/FriendCodeLookup" },
       "description": "Direct point-lookup mapping friend code to public user identity."
+    },
+    "/friendRequests/{requestId}": {
+      "schema": { "$ref": "#/entities/FriendRequest" },
+      "description": "Friend requests sent between registered TOP1 students."
     },
     "/chats/{chatId}": {
       "schema": { "$ref": "#/entities/FriendChat" },
@@ -323,6 +534,14 @@
     "/chats/{chatId}/messages/{messageId}": {
       "schema": { "$ref": "#/entities/ChatMessage" },
       "description": "Immutable messages and quiz challenges inside a friend chat."
+    },
+    "/teams/{teamId}": {
+      "schema": { "$ref": "#/entities/StudyTeam" },
+      "description": "Group study team metadata for team chat."
+    },
+    "/teams/{teamId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/TeamMessage" },
+      "description": "Immutable messages and group challenges inside a study team."
     }
   }
 }

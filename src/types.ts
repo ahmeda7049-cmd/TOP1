@@ -81,9 +81,12 @@ export interface QuizAttempt {
   completedAt: string;
 }
 
+export type AppThemeId = 'sunset' | 'ocean' | 'mint' | 'lavender' | 'midnight';
+
 export interface StudentProgress {
   studentName: string;
   avatarEmoji: string;
+  theme?: AppThemeId;
   points: number;
   streakDays: number;
   lastCheckInDate: string | null;
@@ -112,6 +115,7 @@ export interface PublicProfile {
   points: number;
   streakDays: number;
   completedCount: number;
+  isDiscoverable?: boolean;
 }
 
 export interface FriendLink {
@@ -120,6 +124,24 @@ export interface FriendLink {
   friendCode: string;
   displayName: string;
   avatarEmoji: string;
+}
+
+export type FriendRequestStatus = 'pending' | 'accepted' | 'declined';
+
+export interface FriendRequest {
+  requestId: string;
+  fromUid: string;
+  toUid: string;
+  fromName: string;
+  fromAvatar: string;
+  fromCode: string;
+  toName: string;
+  toAvatar: string;
+  toCode: string;
+  participants: string[];
+  status: FriendRequestStatus;
+  createdAtMs: number;
+  updatedAtMs: number;
 }
 
 export type MessageType = 'text' | 'challenge' | 'score_reply';
@@ -153,9 +175,39 @@ export interface ChatMessage {
   createdAtMs: number;
 }
 
+export type TeamMessageType = 'text' | 'challenge';
+
+export interface StudyTeam {
+  teamId: string;
+  name: string;
+  ownerUid: string;
+  memberUids: string[];
+  lastMessageText: string;
+  lastSenderUid: string;
+  lastSenderName: string;
+  createdAtMs: number;
+  updatedAtMs: number;
+}
+
+export interface TeamMessage {
+  id: string;
+  senderUid: string;
+  senderName: string;
+  senderAvatar: string;
+  memberUids: string[];
+  type: TeamMessageType;
+  text: string;
+  quizId?: string;
+  quizTitle?: string;
+  subjectId?: SubjectId;
+  createdAtMs: number;
+}
+
 export interface ChallengeReplyTarget {
   friendUid: string;
   friendName: string;
   friendAvatar: string;
   friendCode: string;
+  teamId?: string;
+  teamName?: string;
 }

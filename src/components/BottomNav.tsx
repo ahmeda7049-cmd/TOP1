@@ -19,7 +19,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onSelectTab }) 
   return (
     <nav
       aria-label="شريط التنقل السفلي"
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-1.5 py-1.5"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-surface/95 backdrop-blur-md border-t border-line px-1.5 py-1.5"
     >
       <div className="grid grid-cols-5 items-center max-w-lg mx-auto">
         {tabs.map((tab) => {
@@ -29,8 +29,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onSelectTab }) 
               key={tab.id}
               type="button"
               onClick={() => onSelectTab(tab.id)}
-              className={`min-h-[48px] flex flex-col items-center justify-center gap-1 rounded-xl transition-colors focus-visible:outline-2 focus-visible:outline-[#FF5A7A] ${
-                isActive ? 'text-[#FF5A7A] font-black' : 'text-slate-500 hover:text-[#0F172A] font-medium'
+              className={`min-h-[48px] flex flex-col items-center justify-center gap-1 rounded-xl transition-colors focus-visible:outline-2 focus-visible:outline-brand ${
+                isActive ? 'text-brand font-black' : 'text-ink-muted hover:text-ink font-medium'
               }`}
             >
               <span className={isActive ? 'scale-110 transition-transform' : ''}>{tab.icon}</span>

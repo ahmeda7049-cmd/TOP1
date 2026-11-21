@@ -12,23 +12,32 @@ import {
 } from './data/curriculum';
 import {
   AppNotification,
+  AppThemeId,
   ChallengeReplyTarget,
   FriendChat,
   FriendLink,
+  FriendRequest,
   Lesson,
   PublicProfile,
   Quiz,
   StudentProgress,
+  StudyTeam,
   SubjectId,
   TabId,
 } from './types';
+import { APP_THEMES, DEFAULT_THEME, isValidAppTheme } from './data/themes';
 import { auth, googleProvider } from './firebase';
 import {
   ensureUserProvisioned,
   sendFriendMessage,
+  sendTeamMessage,
+  subscribeToDiscoverableProfiles,
+  subscribeToFriendRequests,
   subscribeToFriends,
   subscribeToMyChats,
+  subscribeToMyTeams,
   subscribeToProfile,
+  syncAcceptedOutgoingRequests,
   syncProfileStats,
 } from './services/friendsService';
 import { TopBar } from './components/TopBar';
@@ -50,6 +59,7 @@ function loadSavedProgress(): StudentProgress {
     return {
       studentName: parsed.studentName || INITIAL_PROGRESS.studentName,
       avatarEmoji: parsed.avatarEmoji || INITIAL_PROGRESS.avatarEmoji,
+      theme: isValidAppTheme(parsed.theme) ? parsed.theme : DEFAULT_THEME,
       points: typeof parsed.points === 'number' ? parsed.points : INITIAL_PROGRESS.points,
       streakDays: typeof parsed.streakDays === 'number' ? parsed.streakDays : INITIAL_PROGRESS.streakDays,
       lastCheckInDate: parsed.lastCheckInDate || null,
@@ -66,7 +76,7 @@ function loadSavedProgress(): StudentProgress {
         : INITIAL_PROGRESS.readNotificationIds,
     };
   } catch {
-    return INITIAL_PROGRESS;
+    return { ...INITIAL_PROGRESS, theme: DEFAULT_THEME };
   }
 }
 
@@ -101,6 +111,22 @@ export default function App() {
   const [friends, setFriends] = useState<FriendLink[]>([]);
   const [chats, setChats] = useState<FriendChat[]>([]);
   const [friendProfiles, setFriendProfiles] = useState<Record<string, PublicProfile>>({});
+  const [discoverableProfiles, setDiscoverableProfiles] = useState<PublicProfile[]>([]);
+  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+  const [teams, setTeams] = useState<StudyTeam[]>([]);
+
+  const currentTheme: AppThemeId = isValidAppTheme(progress.theme)
+    ? progress.theme
+    : DEFAULT_THEME;
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    const preset = APP_THEMES.find((t) => t.id === currentTheme);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta && preset) {
+      meta.setAttribute('content', preset.metaThemeColor);
+    }
+  }, [currentTheme]);
 
   useEffect(() => {
     try {
@@ -120,35 +146,41 @@ export default function App() {
         setFriends([]);
         setChats([]);
         setFriendProfiles({});
+        setDiscoverableProfiles([]);
+        setFriendRequests([]);
+        setTeams([]);
       }
     });
     return () => unsub();
   }, []);
 
-  // Provision Firestore user doc, public profile & friend code on sign-in
+  // Provision Firestore user doc, public profile & friend code using app-registered name (never Google name)
   useEffect(() => {
     if (!firebaseUser) return;
     let cancelled = false;
     const init = async () => {
-      const displayName =
-        progress.studentName === INITIAL_PROGRESS.studentName && firebaseUser.displayName
-          ? firebaseUser.displayName.slice(0, 40)
-          : progress.studentName;
-
-      if (displayName !== progress.studentName) {
-        setProgress((prev) => ({ ...prev, studentName: displayName }));
-      }
-
-      const code = await ensureUserProvisioned(
-        firebaseUser,
-        displayName,
-        progress.avatarEmoji,
-        progress.points,
-        progress.streakDays,
-        progress.completedLessonIds.length
-      );
-      if (!cancelled) {
-        setMyFriendCode(code);
+      try {
+        const hasCustomAppName = progress.studentName !== INITIAL_PROGRESS.studentName;
+        const { friendCode, resolvedName } = await ensureUserProvisioned(
+          firebaseUser,
+          progress.studentName,
+          progress.avatarEmoji,
+          progress.points,
+          progress.streakDays,
+          progress.completedLessonIds.length,
+          hasCustomAppName
+        );
+        if (!cancelled) {
+          if (resolvedName && resolvedName !== progress.studentName) {
+            setProgress((prev) => ({ ...prev, studentName: resolvedName }));
+          }
+          setMyFriendCode(friendCode);
+          setAuthError(null);
+        }
+      } catch {
+        if (!cancelled) {
+          setAuthError('تعذّر مزامنة حسابك السحابي مؤقتاً، يمكنك الاستمرار في المذاكرة والمحاولة مجدداً.');
+        }
       }
     };
     void init();
@@ -170,7 +202,9 @@ export default function App() {
       progress.points,
       progress.streakDays,
       progress.completedLessonIds.length
-    );
+    ).catch(() => {
+      // Ignore transient offline sync errors; localStorage retains all progress
+    });
   }, [
     firebaseUser,
     myFriendCode,
@@ -181,22 +215,48 @@ export default function App() {
     progress.completedLessonIds.length,
   ]);
 
-  // Subscribe to friends list & chats once authenticated
+  // Subscribe to friends list, chats, friend requests, teams & discoverable students once authenticated
   useEffect(() => {
     if (!firebaseUser) return;
-    const unsubFriends = subscribeToFriends(firebaseUser.uid, setFriends);
-    const unsubChats = subscribeToMyChats(firebaseUser.uid, setChats);
+    const unsubFriends = subscribeToFriends(firebaseUser.uid, setFriends, () => {
+      setAuthError('تعذّر تحميل قائمة الأصدقاء، تحقق من الاتصال.');
+    });
+    const unsubChats = subscribeToMyChats(firebaseUser.uid, setChats, () => {
+      setAuthError('تعذّر تحميل المحادثات، تحقق من الاتصال.');
+    });
+    const unsubRequests = subscribeToFriendRequests(firebaseUser.uid, setFriendRequests, () => {
+      // Non-blocking error; keep rest of social UI usable
+    });
+    const unsubTeams = subscribeToMyTeams(firebaseUser.uid, setTeams, () => {
+      // Non-blocking error; keep rest of social UI usable
+    });
+    const unsubDiscover = subscribeToDiscoverableProfiles(setDiscoverableProfiles, () => {
+      // Non-blocking error; keep rest of social UI usable
+    });
     return () => {
       unsubFriends();
       unsubChats();
+      unsubRequests();
+      unsubTeams();
+      unsubDiscover();
     };
   }, [firebaseUser]);
 
-  // Subscribe to each friend's live public profile (for points & leaderboard)
+  // Auto-sync accepted outgoing friend requests into /users/{myUid}/friends
+  useEffect(() => {
+    if (!firebaseUser || friendRequests.length === 0) return;
+    const existingIds = new Set(friends.map((f) => f.friendUid));
+    void syncAcceptedOutgoingRequests(firebaseUser.uid, existingIds, friendRequests).catch(() => {
+      // Ignore transient offline sync errors
+    });
+  }, [firebaseUser, friends, friendRequests]);
+
+  // Subscribe to each friend's & team member's live public profile (for points & Honor Board)
   const friendUidsKey = Array.from(
     new Set([
       ...friends.map((f) => f.friendUid),
       ...chats.flatMap((c) => c.participants.filter((id) => id !== firebaseUser?.uid)),
+      ...teams.flatMap((t) => t.memberUids.filter((id) => id !== firebaseUser?.uid)),
     ])
   )
     .sort()
@@ -209,12 +269,18 @@ export default function App() {
     }
     const uids = friendUidsKey.split(',').filter(Boolean);
     const unsubs = uids.map((uid) =>
-      subscribeToProfile(uid, (profile) => {
-        setFriendProfiles((prev) => ({
-          ...prev,
-          [uid]: profile,
-        }));
-      })
+      subscribeToProfile(
+        uid,
+        (profile) => {
+          setFriendProfiles((prev) => ({
+            ...prev,
+            [uid]: profile,
+          }));
+        },
+        () => {
+          // Ignore unavailable friend profile snapshots safely
+        }
+      )
     );
     return () => {
       unsubs.forEach((fn) => fn());
@@ -225,13 +291,31 @@ export default function App() {
     setAuthError(null);
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch {
-      setAuthError('تعذّر إتمام تسجيل الدخول بجوجل، تأكد من السماح بالنوافذ المنبثقة وحاول مجدداً.');
+    } catch (err) {
+      const code = (err as { code?: string })?.code || '';
+      if (code === 'auth/popup-blocked') {
+        setAuthError(
+          'المتصفح منع نافذة جوجل المنبثقة. اسمح بالنوافذ المنبثقة لهذا الموقع ثم أعد المحاولة.'
+        );
+      } else if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        setAuthError('تم إغلاق نافذة تسجيل الدخول قبل إتمام العملية، اضغط مرة أخرى للمحاولة.');
+      } else if (code === 'auth/unauthorized-domain') {
+        setAuthError('هذا النطاق غير مصرّح له في إعدادات Firebase Auth، افتح رابط التطبيق الرسمي.');
+      } else if (code === 'auth/network-request-failed') {
+        setAuthError('تعذّر الاتصال بالإنترنت، تحقق من الشبكة وحاول مجدداً.');
+      } else {
+        setAuthError('تعذّر إتمام تسجيل الدخول بجوجل، تأكد من السماح بالنوافذ المنبثقة وحاول مجدداً.');
+      }
     }
   };
 
   const handleSignOutGoogle = async () => {
-    await signOut(auth);
+    setAuthError(null);
+    try {
+      await signOut(auth);
+    } catch {
+      setAuthError('تعذّر تسجيل الخروج الآن، حاول مرة أخرى.');
+    }
   };
 
   const handleClearPendingInvite = useCallback(() => {
@@ -352,6 +436,20 @@ export default function App() {
     target: ChallengeReplyTarget
   ) => {
     if (!firebaseUser) return;
+    if (target.teamId) {
+      const targetTeam = teams.find((t) => t.teamId === target.teamId);
+      if (targetTeam) {
+        await sendTeamMessage({
+          team: targetTeam,
+          myUid: firebaseUser.uid,
+          myName: progress.studentName,
+          myAvatar: progress.avatarEmoji,
+          type: 'text',
+          text: `خلصت تحدي "${quiz.title}" وجبت ${score} من ${total}! مين هيكسر الرقم ده؟ 🏆`,
+        });
+        return;
+      }
+    }
     await sendFriendMessage({
       myUid: firebaseUser.uid,
       myName: progress.studentName,
@@ -465,8 +563,15 @@ export default function App() {
     }));
   };
 
+  const handleSelectTheme = (theme: AppThemeId) => {
+    setProgress((prev) => ({
+      ...prev,
+      theme,
+    }));
+  };
+
   const handleResetProgress = () => {
-    setProgress(INITIAL_PROGRESS);
+    setProgress({ ...INITIAL_PROGRESS, theme: currentTheme });
     setActiveLessonId(null);
     setActiveQuiz(null);
     setChallengeTarget(null);
@@ -477,7 +582,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFF9FA] text-[#0F172A] pb-24 lg:pb-12">
+    <div className="min-h-screen bg-canvas text-ink pb-24 lg:pb-12 transition-colors duration-200">
       <TopBar
         activeTab={activeTab}
         onSelectTab={handleSelectTab}
@@ -488,6 +593,8 @@ export default function App() {
         onMarkNotificationRead={handleMarkNotificationRead}
         onNotificationNavigate={handleNotificationNavigate}
         onStartFeaturedQuiz={handleStartFeaturedQuiz}
+        currentTheme={currentTheme}
+        onSelectTheme={handleSelectTheme}
       />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-3 sm:pt-5">
@@ -499,12 +606,18 @@ export default function App() {
             units={UNITS}
             lessons={LESSONS}
             progress={progress}
+            friendProfiles={friendProfiles}
             myFriendCode={myFriendCode}
+            isSignedIn={Boolean(firebaseUser)}
+            authError={authError}
+            onSignInGoogle={handleSignInGoogle}
             onStudyLesson={handleStudyLesson}
             onQuizLesson={handleQuizLesson}
             onDailyCheckIn={handleDailyCheckIn}
             onStartDailyChallenge={handleStartDailyChallenge}
             onOpenFriends={() => handleSelectTab('friends')}
+            currentTheme={currentTheme}
+            onSelectTheme={handleSelectTheme}
           />
         )}
 
@@ -553,10 +666,14 @@ export default function App() {
             friends={friends}
             chats={chats}
             friendProfiles={friendProfiles}
+            discoverableProfiles={discoverableProfiles}
+            friendRequests={friendRequests}
+            teams={teams}
             pendingInviteCode={pendingInviteCode}
             onClearPendingInvite={handleClearPendingInvite}
             onSignInGoogle={handleSignInGoogle}
             onSignOutGoogle={handleSignOutGoogle}
+            onUpdateProfile={handleUpdateProfile}
             onAcceptChallenge={handleAcceptChallenge}
           />
         )}
@@ -568,8 +685,15 @@ export default function App() {
             quizzes={QUIZZES}
             progress={progress}
             myFriendCode={myFriendCode}
+            isSignedIn={Boolean(firebaseUser)}
+            userEmail={firebaseUser?.email}
+            authError={authError}
+            onSignInGoogle={handleSignInGoogle}
+            onSignOutGoogle={handleSignOutGoogle}
             onUpdateProfile={handleUpdateProfile}
             onResetProgress={handleResetProgress}
+            currentTheme={currentTheme}
+            onSelectTheme={handleSelectTheme}
           />
         )}
       </main>
